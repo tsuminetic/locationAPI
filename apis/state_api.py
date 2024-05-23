@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from app import db
 from models.state import State, StateSchema
+from models.country import Country
+from sqlalchemy.orm import joinedload
 
 api = Blueprint('state_api', __name__)
 
@@ -29,10 +31,17 @@ def get_state(state_id):
 def add_state():
     state_schema = StateSchema()
 
+    country_name = request.json.get('country_name')
+    country = Country.query.filter_by(name=country_name).first()
+    if not country:
+        return jsonify({'error': 'Country not found. Please add the country first.'}), 404
+    
     try:
         state_data = state_schema.load(request.get_json())
     except ValidationError as err:
         return jsonify({'error': 'please enter all fields correctly'}), 400
+
+    state_data.country_id = country.id
 
     db.session.add(state_data)
     db.session.commit()
@@ -42,7 +51,7 @@ def add_state():
 
 # Delete a state
 @api.route('/<int:state_id>', methods=['DELETE'])
-def delete_state(state_id):
+def delete_country(state_id):
     state = State.query.get(state_id)
     if not state:
         return jsonify({'error': 'resource not found'}), 404

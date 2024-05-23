@@ -8,6 +8,7 @@ class State(db.Model):
     timezone = db.Column(db.String(200))
     latitude = db.Column(db.String(200))
     longitude = db.Column(db.String(200))
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     
 class StateSchema(ma.SQLAlchemyAutoSchema):
     
@@ -21,5 +22,7 @@ class StateSchema(ma.SQLAlchemyAutoSchema):
             "timezone",
             "latitude",
             "longitude",
+            "country_id",
+            "country_name"
         )
     
