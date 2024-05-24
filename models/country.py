@@ -13,9 +13,9 @@ class Country(db.Model):
     calling_code = db.Column(db.String(10))
     timezone = db.Column(db.String(200))
 
-
+from models.state import StateNameSchema
 class CountrySchema(ma.SQLAlchemyAutoSchema):
-    
+    states = ma.Nested(StateNameSchema, many=True)
     class Meta:
         model = Country
         load_instance = True
@@ -29,7 +29,8 @@ class CountrySchema(ma.SQLAlchemyAutoSchema):
             "continent",
             "iso_code",
             "calling_code",
-            "timezone"
+            "timezone",
+            "states"
         )
 
 class CountryLoader(ma.SQLAlchemyAutoSchema):
