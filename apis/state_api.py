@@ -37,7 +37,13 @@ def add_state():
     state_schema = StateSchema()
     
     try:
+        
         state_data = state_schema.load(request.get_json())
+        
+        country_id = request.get_json().get('country_id')
+        country = Country.query.get(country_id)
+        if not country:
+            raise BadRequest('Country does not exist')
         
         db.session.add(state_data)
         db.session.commit()
@@ -46,7 +52,8 @@ def add_state():
         return jsonify({"data": response_data})
     except ValidationError as err:
         return jsonify({'error': 'please enter all fields correctly'}), 400
-
+    except BadRequest as err: 
+        return jsonify({'error': str(err)}), 400 
     
 
 # Delete a state
