@@ -31,3 +31,20 @@ class CountrySchema(ma.SQLAlchemyAutoSchema):
             "calling_code",
             "timezone"
         )
+
+class CountryLoader(ma.SQLAlchemyAutoSchema):
+    
+    class Meta:
+        model = Country
+        load_instance = True
+        fields = (
+            "name",
+            "capital",
+            "population",
+            "currency",
+            "official_language",
+            "continent",
+            "iso_code",
+            "calling_code",
+            "timezone"
+        )
