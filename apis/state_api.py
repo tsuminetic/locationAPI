@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from app import db
-from models.state import State, StateSchema
+from models.state import State, StateSchema,StateLoader
 from models.country import Country
 from sqlalchemy.orm import joinedload
+from werkzeug.exceptions import BadRequest
 
 api = Blueprint('state_api', __name__)
 
@@ -18,71 +19,78 @@ def get_all():
 # Get a specific state
 @api.route('/<int:state_id>')
 def get_state(state_id):
-    state = State.query.get(state_id)
-    if not state:
-        return jsonify({'error': 'resource not found'}), 404
+    try:
+        state = State.query.get(state_id)
+        if not state:
+            raise BadRequest("resource not found")
 
-    state_schema = StateSchema()
-    data = state_schema.dump(state)
-    return jsonify({"data": data})
-
+        state_schema = StateSchema()
+        data = state_schema.dump(state)
+        return jsonify({"data": data})
+    except BadRequest as err: 
+        return jsonify({'error': str(err)}), 400 
+    
+    
 # Add a state
 @api.route('', methods=['POST'])
 def add_state():
     state_schema = StateSchema()
-
-    country_name = request.json.get('country_name')
-    country = Country.query.filter_by(name=country_name).first()
-    if not country:
-        return jsonify({'error': 'Country not found. Please add the country first.'}), 404
     
     try:
         state_data = state_schema.load(request.get_json())
+        
+        db.session.add(state_data)
+        db.session.commit()
+
+        response_data = state_schema.dump(state_data)
+        return jsonify({"data": response_data})
     except ValidationError as err:
         return jsonify({'error': 'please enter all fields correctly'}), 400
 
-    state_data.country_id = country.id
-
-    db.session.add(state_data)
-    db.session.commit()
-
-    response_data = state_schema.dump(state_data)
-    return jsonify({"data": response_data})
+    
 
 # Delete a state
 @api.route('/<int:state_id>', methods=['DELETE'])
 def delete_country(state_id):
-    state = State.query.get(state_id)
-    if not state:
-        return jsonify({'error': 'resource not found'}), 404
+    try:
+        state = State.query.get(state_id)
+        if not state:
+            raise BadRequest("resource not found")
+        
+        db.session.delete(state)
+        db.session.commit()
+
+        return jsonify({'success': True})
+    except BadRequest as err: 
+        return jsonify({'error': str(err)}), 400 
     
-    db.session.delete(state)
-    db.session.commit()
-
-    return jsonify({'success': True})
-
 # Edit a state
 @api.route('/<int:state_id>', methods=['PUT'])
 def edit_state(state_id):
-    state = State.query.get(state_id)
-    
-    if not state:
-        return jsonify({'error': 'State not found'}), 404
-
-    state_schema = StateSchema(partial=True)
     
     try:
+        state = State.query.get(state_id)
+    
+        if not state:
+            raise BadRequest("State not found")
+
+        state_loader = StateLoader(partial=True)
+        state_schema = StateSchema(partial=True)
+        
         request_data = request.get_json()
-        validated_data = state_schema.load(request_data, partial=True)
+
+        validated_data = state_loader.load(request_data, instance=state, partial=True)
+        db.session.merge(validated_data)
+        db.session.commit()
+
+        updated_state_data = state_schema.dump(state)
+        return jsonify({"data": updated_state_data})
+    
     except ValidationError as err:
         return jsonify({'error': err.messages}), 400
-    
-    for key, value in request_data.items():
-        if key == "id":
-            return jsonify({'error': "Not allowed"}), 403
-        setattr(state, key, value)
-
-    db.session.commit()
-
-    updated_state_data = state_schema.dump(state)
-    return jsonify({"data": updated_state_data})
+    except ZeroDivisionError as err:
+        return jsonify({'error': err.args[0]}), 500
+    except BadRequest as err:
+        return jsonify({'error': str(err)}), 400 
+    except Exception as err:
+        return jsonify({'error': err.args[0]}), 500
