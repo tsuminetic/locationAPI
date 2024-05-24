@@ -9,6 +9,7 @@ class State(db.Model):
     latitude = db.Column(db.String(200))
     longitude = db.Column(db.String(200))
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
+    country= db.relationship("Country", backref=db.backref("states", cascade="all, delete-orphan"))
     
 class StateSchema(ma.SQLAlchemyAutoSchema):
     
@@ -22,7 +23,19 @@ class StateSchema(ma.SQLAlchemyAutoSchema):
             "timezone",
             "latitude",
             "longitude",
-            "country_id",
-            "country_name"
+            "country_id"
+        )
+class StateLoader(ma.SQLAlchemyAutoSchema):
+    
+    class Meta:
+        model = State
+        load_instance = True
+        fields = (
+            "name",
+            "population",
+            "timezone",
+            "latitude",
+            "longitude",
+            "country_id"
         )
     
