@@ -38,4 +38,9 @@ class StateLoader(ma.SQLAlchemyAutoSchema):
             "longitude",
             "country_id"
         )
+        
+class StateNameSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = State
+        fields = ("name",)
     
