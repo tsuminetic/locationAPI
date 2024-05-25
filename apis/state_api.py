@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from app import db
-from models.state import State, StateSchema,StateLoader
+from models.state import State,StateSchema, StateLoader
 from models.country import Country
-from sqlalchemy.orm import joinedload
 from werkzeug.exceptions import BadRequest
 
 api = Blueprint('state_api', __name__)
