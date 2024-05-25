@@ -14,7 +14,7 @@ ma = Marshmallow(app)
 
 from models.country import Country, CountrySchema
 from models.state import State, StateSchema
-# from models.city import City, CitySchema
+from models.city import City, CitySchema
 
 with app.app_context():
     db.create_all()
