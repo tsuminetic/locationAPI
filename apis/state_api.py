@@ -18,85 +18,63 @@ def get_all():
 # Get a specific state
 @api.route('/<int:state_id>')
 def get_state(state_id):
-    try:
-        state = State.query.get(state_id)
-        if not state:
-            raise BadRequest("resource not found")
+    state = State.query.get(state_id)
+    if not state:
+        raise BadRequest("resource not found")
 
-        state_schema = StateSchema()
-        data = state_schema.dump(state)
-        return jsonify({"data": data})
-    except BadRequest as err: 
-        return jsonify({'error': str(err)}), 400 
+    state_schema = StateSchema()
+    data = state_schema.dump(state)
+    return jsonify({"data": data})
     
     
 # Add a state
 @api.route('', methods=['POST'])
 def add_state():
     state_schema = StateSchema()
+        
+    state_data = state_schema.load(request.get_json())
     
-    try:
-        
-        state_data = state_schema.load(request.get_json())
-        
-        country_id = request.get_json().get('country_id')
-        country = Country.query.get(country_id)
-        if not country:
-            raise BadRequest('Country does not exist')
-        
-        db.session.add(state_data)
-        db.session.commit()
+    country_id = request.get_json().get('country_id')
+    country = Country.query.get(country_id)
+    if not country:
+        raise BadRequest('Country does not exist')
+    
+    db.session.add(state_data)
+    db.session.commit()
 
-        response_data = state_schema.dump(state_data)
-        return jsonify({"data": response_data})
-    except ValidationError as err:
-        return jsonify({'error': 'please enter all fields correctly'}), 400
-    except BadRequest as err: 
-        return jsonify({'error': str(err)}), 400 
-    
+    response_data = state_schema.dump(state_data)
+    return jsonify({"data": response_data})
+
 
 # Delete a state
 @api.route('/<int:state_id>', methods=['DELETE'])
 def delete_country(state_id):
-    try:
-        state = State.query.get(state_id)
-        if not state:
-            raise BadRequest("resource not found")
-        
-        db.session.delete(state)
-        db.session.commit()
+    state = State.query.get(state_id)
+    if not state:
+        raise BadRequest("resource not found")
+    
+    db.session.delete(state)
+    db.session.commit()
 
-        return jsonify({'success': True})
-    except BadRequest as err: 
-        return jsonify({'error': str(err)}), 400 
+    return jsonify({'success': True})
     
 # Edit a state
 @api.route('/<int:state_id>', methods=['PUT'])
 def edit_state(state_id):
-    
-    try:
-        state = State.query.get(state_id)
-    
-        if not state:
-            raise BadRequest("State not found")
 
-        state_loader = StateLoader(partial=True)
-        state_schema = StateSchema(partial=True)
-        
-        request_data = request.get_json()
+    state = State.query.get(state_id)
 
-        validated_data = state_loader.load(request_data, instance=state, partial=True)
-        db.session.merge(validated_data)
-        db.session.commit()
+    if not state:
+        raise BadRequest("State not found")
 
-        updated_state_data = state_schema.dump(state)
-        return jsonify({"data": updated_state_data})
+    state_loader = StateLoader(partial=True)
+    state_schema = StateSchema(partial=True)
     
-    except ValidationError as err:
-        return jsonify({'error': err.messages}), 400
-    except ZeroDivisionError as err:
-        return jsonify({'error': err.args[0]}), 500
-    except BadRequest as err:
-        return jsonify({'error': str(err)}), 400 
-    except Exception as err:
-        return jsonify({'error': err.args[0]}), 500
+    request_data = request.get_json()
+
+    validated_data = state_loader.load(request_data, instance=state, partial=True)
+    db.session.merge(validated_data)
+    db.session.commit()
+
+    updated_state_data = state_schema.dump(state)
+    return jsonify({"data": updated_state_data})
