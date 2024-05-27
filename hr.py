@@ -1,6 +1,7 @@
 
-def pickingNumbers(a):
+def climbingLeaderboard(ranked, player):
     return 0
 
-print(pickingNumbers([4, 6, 5, 3, 3, 1]))#3
-print(pickingNumbers([1, 2, 2, 3, 1, 2]))#5
+
+
+climbingLeaderboard([100,100,50,40,40,20,10],[5,25,50,120])
