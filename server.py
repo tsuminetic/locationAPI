@@ -2,8 +2,10 @@ from app import app
 from flask import jsonify
 from werkzeug.exceptions import HTTPException
 from marshmallow.exceptions import ValidationError
-from apis import initialize_routes
-initialize_routes(app)
+from apis.v1 import initialize_routes_v1
+from apis.v2 import initialize_routes_v2
+initialize_routes_v1(app)
+initialize_routes_v2(app)
 
 @app.errorhandler(Exception)
 def handle_bad_request(e):
