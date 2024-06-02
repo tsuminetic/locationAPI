@@ -1,12 +1,11 @@
-def findDigits(number):
-    result = 0
-    for letter in list(str(number)):
-        num = int(letter)
-        try:
-            if number % num == 0:
-                result+=1
-        except ZeroDivisionError as err:
-            pass
+def extraLongFactorials(n):
+    result=1
+    for i in range(1,n+1):
+        result *= i
+            
     return result
     
-print(findDigits(1012))
+    
+print(extraLongFactorials(25))
+15511210043330985984000000
+15511210043330985984000000
