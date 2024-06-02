@@ -1,4 +1,12 @@
-def saveThePrisoner(prisoners, candies, startFrom):
-    return ((startFrom+candies-2)%prisoners)+1
+def findDigits(number):
+    result = 0
+    for letter in list(str(number)):
+        num = int(letter)
+        try:
+            if number % num == 0:
+                result+=1
+        except ZeroDivisionError as err:
+            pass
+    return result
     
-print(saveThePrisoner(4,6,2))
+print(findDigits(1012))
