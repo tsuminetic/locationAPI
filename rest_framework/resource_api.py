@@ -10,12 +10,22 @@ class ResourceAPI(MethodView):
     loader_class = None
 
     def get(self, resource_id=None):
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+
         if resource_id is None:
             # List all resources
-            resources = self.model_class.query.all()
+            resources = self.model_class.query.paginate(page=page, per_page=per_page)
             schema = self.schema_class(many=True)
-            data = schema.dump(resources)
-            return jsonify({"data": data, "metadata": {"total": len(resources)}})
+            data = schema.dump(resources.items)
+            return jsonify({
+                "data": data, 
+                "metadata": {
+                    "total": resources.total,
+                    "page": page,
+                    "per_page": per_page
+                }
+            })
         else:
             # Get a specific resource
             resource = self.model_class.query.get(resource_id)
