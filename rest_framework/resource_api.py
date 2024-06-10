@@ -8,39 +8,65 @@ class ResourceAPI(MethodView):
     model_class = None
     schema_class = None
     loader_class = None
+    default_page_size = 10
+
+    def filter_query(self, query):
+        pass
+    
+    def order_query(self, query, query_params):
+        pass
+
+    def before_get(self):
+        pass
+
+    def after_get(self, data):
+        pass
+    
+    def search(self):
+        query_params = request.args
+        query = self.model_class.query
+
+        resources = self.filter_query(query, query_params).all()
+        resources = self.order_query(query, query_params).all()
+        schema = self.schema_class(many=True)
+        data = schema.dump(resources)
+        return jsonify({"data": data})
+    
+    def detail(self, resource_id):
+        resource = self.model_class.query.get(resource_id)
+        if not resource:
+            raise BadRequest("Resource not found")
+
+        schema = self.schema_class()
+        data = schema.dump(resource)
+        return jsonify({"data": data})
+
+    def list(self):
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', self.default_page_size, type=int)
+
+        resources = self.model_class.query.paginate(page=page, per_page=per_page)
+        schema = self.schema_class(many=True)
+        data = schema.dump(resources.items)
+        return jsonify({
+            "data": data, 
+            "metadata": {
+                "total": resources.total,
+                "page": page,
+                "per_page": per_page
+            }
+        })
 
     def get(self, resource_id=None):
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 10, type=int)
-
-        if resource_id is None:
-            # List all resources
-            resources = self.model_class.query.paginate(page=page, per_page=per_page)
-            schema = self.schema_class(many=True)
-            data = schema.dump(resources.items)
-            return jsonify({
-                "data": data, 
-                "metadata": {
-                    "total": resources.total,
-                    "page": page,
-                    "per_page": per_page
-                }
-            })
+        self.before_get()
+        if request.endpoint in {'country_api_v2.search', 'state_api_v2.search', 'city_api_v2.search'}:
+            response = self.search()
+        elif resource_id is None:
+            response = self.list()
         else:
-            # Get a specific resource
-            resource = self.model_class.query.get(resource_id)
-            if not resource:
-                raise BadRequest("resource not found")
-
-            schema = self.schema_class()
-            data = schema.dump(resource)
-            return jsonify({"data": data})
-
-    def before_post(self, body):
-        return body
-
-    def after_post(self, resource):
-        pass
+            response = self.detail(resource_id)
+        self.after_get(response.json)
+        return response
 
     def post(self):
         # Add a resource
