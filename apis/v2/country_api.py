@@ -20,7 +20,7 @@ class CountryAPI(ResourceAPI):
         }
 
         order_by = query_params.get('order_by')
-        order_direction = query_params.get('order_direction', 'asc')  # Default to ascending order
+        order_direction = query_params.get('order_direction', 'asc') 
 
         if order_by in order_by_mappings:
             field = order_by_mappings[order_by]
